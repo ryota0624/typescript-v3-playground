@@ -5,3 +5,9 @@ schema to def json: ./node_modules/apollo/bin/run schema:download  --endpoint sa
 query def ts: ./node_modules/apollo/bin/run codegen:generate --target=typescript --schema=schema.json --queries="queries/*.graphql"
 
 local server: ./node_modules/local-web-server/bin/cli.js --config-file lws.config.js -p 8004
+
+
+TODO
+
+queryGenとwebpackを1つのコマンドで呼び出せるようにする
+↑のときに色が失われないようにする

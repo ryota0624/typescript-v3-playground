@@ -22,10 +22,7 @@ function applicationGraphQLError(error: GraphQLError & {type: ApplicationGraphQL
   return error;
 }
 
-
-
 const setAuthTokenMiddleware = new ApolloLink((operation, forward) => {
-  console.log(operation)
   operation.setContext({
     headers: {
       authorization: localStorage.getItem("token") || null

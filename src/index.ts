@@ -1,6 +1,7 @@
 import * as fp from "fp-ts";
 import * as ap from "./apollo";
-import query from "../queries/GetTweets.graphql";
+import GetTweetsQuery from "../queries/GetTweets.graphql";
+import * as GetTweets from "../queries/__generated__/GetTweets";
 
 function toNumber(value: any): fp.option.Option<number> {
   const number = Number(value);
@@ -23,10 +24,13 @@ function hoge(arg: number) {
 }
 
 
-ap.executeQuery<null, null>(
-  query
+ap.executeGraphql<null, GetTweets.GetTweets>(
+  GetTweetsQuery
   , null)
-  .then(a => console.log(a))
+  .then(a => {
+    if (a && a.data) {
+    }
+  })
   .catch(e => console.log(e.result))
 
 

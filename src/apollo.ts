@@ -1,8 +1,21 @@
-import ApolloClient, { execute, makePromise } from 'apollo-link';
+import {execute, makePromise, DocumentNode} from 'apollo-link';
+import {GraphQLError} from 'graphql';
 import { HttpLink } from 'apollo-link-http';
 
-const operation = {
-  query: gql`query { hello }`,
-};
+export interface ExecutionResult<Data> {
+  data?: Data;
+  extensions?: { [key: string]: any };
+  errors?: GraphQLError[];
+}
 
-execute(new HttpLink({uri: "/api"}), operation);
+export function executeQuery<V, R>(query: DocumentNode, variables: V) {
+  const operation = {
+    query,
+    variables
+  };
+
+  return makePromise(execute(
+    new HttpLink({uri: "/api/graphql"}),
+    operation
+  ))
+}

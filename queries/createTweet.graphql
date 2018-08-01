@@ -1,0 +1,5 @@
+mutation CreateTweet($text: String) {
+  createTweet(body: $text) {
+    date
+  }
+}

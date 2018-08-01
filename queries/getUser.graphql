@@ -1,0 +1,6 @@
+query GetUser($userId: ID!) {
+  User(id: $userId) {
+    username,
+    avatar_url
+  }
+}

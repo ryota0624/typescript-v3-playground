@@ -20,6 +20,7 @@
     "local-web-server": "^2.6.0",
     "parcel-bundler": "^1.9.7",
     "parcel-plugin-typescript": "^1.0.0",
+    "reason-react": "^0.4.2",
     "ts-loader": "^4.4.2",
     "typescript": "^3.0.1"
   },
@@ -29,6 +30,7 @@
     "babel-loader": "^7.1.5",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "babel-preset-env": "^1.7.0",
+    "bs-platform": "^4.0.3",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.16.3",
     "webpack-cli": "^3.1.0"

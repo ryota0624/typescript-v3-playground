@@ -52,7 +52,7 @@ module.exports = {
 	mode: 'development',
 
 	resolve: {
-		extensions: [".ts", ".js", ".graphql"]
+		extensions: [".ts", ".js", ".graphql", ".bs.js"]
 	},
 
 	optimization: {

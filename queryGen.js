@@ -1,48 +1,79 @@
-const spawn = require('child_process').spawnSync;
-const fs = require('fs');
-const chokidar = require('chokidar');
-const watcher = chokidar.watch('./queries', {	//watch対象ディレクトリorファイル
-	ignored: /\.ts|__generated__/,	//無視する対象
-	persistent:true	//監視を継続するかどうか
-	});
+const spawn = require('child_process').spawn;
 
-function generateTsDef() {
-	spawn('./node_modules/apollo/bin/run', 
-		['codegen:generate', '--target=typescript', '--schema=schema.json', '--queries="queries/*.graphql"'],
+
+
+function infoLog(text) {
+	const green = '\u001b[32m';
+	const reset = '\u001b[0m';
+
+	console.log(green + text + reset);
+}
+
+function errorLog(error) {
+	const red = '\u001b[31m';
+	const reset = '\u001b[0m';
+
+	console.log(error)
+	console.log(red + error + reset);
+	return error;
+}
+
+function generateTsDef({watch} = {watch: false}) {
+	return spawn('npx', 
+		['apollo', 'codegen:generate', '--target=typescript', '--schema=schema.json', '--queries=queries/*.graphql'].concat(watch ? ['--watch'] : []),
 		{stdio: 'inherit'}
-	)
-}
-generateTsDef();
-function clearGenerateDir() {
-	if (!fs.existsSync('queries/__generated__')) return -1;
-	console.log('------- start clear directory __gererated__ -------');
-	const allFileNames = fs.readdirSync('queries/__generated__');
-	allFileNames.forEach(fileName => {
-		fs.unlinkSync(`queries/__generated__/${fileName}`);
-	});
-	fs.rmdirSync('queries/__generated__');
-	console.log('------- finish clear directory __gererated__ -------');
+	);
 }
 
-// watcher.on('ready', () => { console.log("監視開始"); })
-// 	.on('add', (path) => { 
-// 		console.log("追加ファイル-> " + path); 
-// 	})
-// 	.on('addDir', (path) => {
-// 		 console.log("追加ディレクトリ-> " + path); 
-// 		})
-// 	.on('unlink', (path) => { 
-// 		console.log("削除されました-> " + path);
-// 		clearGenerateDir();
-// 		generateTsDef();
-// 	})
-//   .on('unlinkDir', (path) => {
-// 		 console.log("削除されました-> " + path);
-// 		 clearGenerateDir();
-// 		 generateTsDef();
-// 	})
-// 	.on('change', (path) => {
-// 		 console.log("修正されました-> " + path); 
-// 		 generateTsDef();
-// 	})
-// 	.on('error', (error) => { console.log("エラーです-> " + error); });
+function webpack({watch} = {watch: false}) {
+	return spawn('npx', 
+		['webpack-cli', '--mode=development', '--config', 'webpack.dev.js'].concat( watch ? ['--w']: []),
+		{stdio: 'inherit'}
+	);
+}
+
+function localWebServer() {
+	return spawn('npx',
+		['lws', '--config-file', 'lws.config.js', '-p', '8004'],
+		{stdio: 'inherit'}
+	);
+}
+
+function childProcessWrapPromise(childProcess) {
+	return new Promise((resolve, reject) => {
+		childProcess.on('exit', () => resolve());
+		childProcess.on('error', error => reject(error));
+	});
+}
+
+function initialize() {
+	infoLog("------ start initialize ------");
+	const tsDefProcess = generateTsDef();
+	return childProcessWrapPromise(tsDefProcess).then(() => {
+		infoLog("------ finish initialize ------");
+		infoLog("\n")
+	});
+}
+
+function main(watch) {
+	infoLog('----- start main -----');
+	const tsDefProcess = watch ? generateTsDef({watch: true}) : null;
+	const webpackProcess= webpack({watch});
+	const localWebServerProcess = watch ? localWebServer() : null;
+
+	const processes = [tsDefProcess, webpackProcess, localWebServerProcess]
+		.filter((p) => p).map(childProcessWrapPromise)
+
+	return Promise.all(processes).then(() => {
+		infoLog("------ finish main ------");
+	});
+}
+
+function start() {
+ const watch = process.argv.some((arg) => arg === "--w");
+	return initialize()
+		.then(() => main(watch))
+}
+
+
+start().catch(errorLog);

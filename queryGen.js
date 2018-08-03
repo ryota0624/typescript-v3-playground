@@ -39,6 +39,13 @@ function localWebServer() {
 	);
 }
 
+function buildBs({watch} = {watch: false}) {
+	return spawn('npx',
+		['bsb'].concat( watch ? ['-w']: []),
+		{stdio: 'inherit'}
+	);	
+}
+
 function childProcessWrapPromise(childProcess) {
 	return new Promise((resolve, reject) => {
 		childProcess.on('exit', () => resolve());
@@ -49,7 +56,14 @@ function childProcessWrapPromise(childProcess) {
 function initialize() {
 	infoLog("------ start initialize ------");
 	const tsDefProcess = generateTsDef();
-	return childProcessWrapPromise(tsDefProcess).then(() => {
+	const bsBuildProcess = buildBs();
+
+	const initializeProcesses = [
+		tsDefProcess,
+		bsBuildProcess
+	].map(childProcessWrapPromise);
+
+	return Promise.all(initializeProcesses).then(() => {
 		infoLog("------ finish initialize ------");
 		infoLog("\n")
 	});
@@ -60,8 +74,9 @@ function main(watch) {
 	const tsDefProcess = watch ? generateTsDef({watch: true}) : null;
 	const webpackProcess= webpack({watch});
 	const localWebServerProcess = watch ? localWebServer() : null;
+	const bsBuildProcess = watch ? buildBs({watch}) : null;
 
-	const processes = [tsDefProcess, webpackProcess, localWebServerProcess]
+	const processes = [tsDefProcess, webpackProcess, localWebServerProcess, bsBuildProcess]
 		.filter((p) => p).map(childProcessWrapPromise)
 
 	return Promise.all(processes).then(() => {
